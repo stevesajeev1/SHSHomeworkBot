@@ -6,6 +6,8 @@ const client = new Client({
 });
 const config = require("./config.json");
 
+const imap = require("./imap");
+
 // We also need to make sure we're attaching the config to the CLIENT so it's accessible everywhere!
 client.config = config;
 client.commands = new Collection();
@@ -27,3 +29,4 @@ for (const file of commands) {
 }
 
 client.login(config.token);
+imap.start();

@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/stevesajeev1/SHSHomeworkBot#readme",
   "dependencies": {
-    "discord.js": "^13.6.0"
+    "discord.js": "^13.6.0",
+    "mail-listener-fixed2": "^1.0.2"
   }
 }
