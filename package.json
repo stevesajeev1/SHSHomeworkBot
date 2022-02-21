@@ -1,0 +1,23 @@
+{
+  "name": "shshomeworkbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevesajeev1/SHSHomeworkBot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stevesajeev1/SHSHomeworkBot/issues"
+  },
+  "homepage": "https://github.com/stevesajeev1/SHSHomeworkBot#readme",
+  "dependencies": {
+    "discord.js": "^13.6.0"
+  }
+}
