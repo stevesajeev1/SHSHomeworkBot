@@ -25,6 +25,10 @@ module.exports = async (client, interaction) => {
           client.slashcmds.get(interaction.message.interaction.commandName).successfulDeletion(client, interaction);
           break;
         }
+        case 'announce': {
+          client.slashcmds.get(interaction.message.interaction.commandName).successfulAnnouncement(client, interaction);
+          break;
+        }
       }
       return;
     }

@@ -14,7 +14,7 @@ exports.generateHomework = (client, channelID, roleID) => {
         }
     });
     fs.writeFileSync('homework.json', JSON.stringify(homework, null, 2));
-    const homeworkEmbed = new MessageEmbed()
+    let homeworkEmbed = new MessageEmbed()
         .setColor('#9B59B6')
     let homeworkList = `<@&${roleID}>\n\`\`\`diff\n`;
     var ran = false;

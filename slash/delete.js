@@ -18,6 +18,11 @@ module.exports = {
         // first generate the options
         let options = [];
         let homework = JSON.parse(fs.readFileSync('homework.json'));
+        // check if there is any homework in the first place
+        if (homework.length == 0) {
+            interaction.editReply({ content: `As there is no homework at this time, there is nothing to edit!`});
+            return;
+        }
         for (var work of homework) {
             options.push({
                 label: `${work.name} - ${helper.getClassName(work.channelID)}`,
@@ -45,7 +50,6 @@ module.exports = {
 
         interaction.update({ content: `:white_check_mark: Deleted the homework.`, components: [] });
     }
-
 };
 
 
