@@ -58,7 +58,8 @@ module.exports = {
         const date = dayjs(helper.extract(initialContent, '`')[1]);
         interaction.update({ content: `:white_check_mark: Added \`${homeworkName}\` due \`${date.format('MM/DD/YYYY h:mm A')}\` for \`${helper.getClassName(interaction.values[0])}\``, components: [] });
         add(client, homeworkName, date, interaction.values[0]);
-    }
+    },
+    add: add
 };
 
 function add(client, homeworkName, date, channelID) {
@@ -74,5 +75,3 @@ function add(client, homeworkName, date, channelID) {
     fs.writeFileSync('homework.json', JSON.stringify(homework, null, 2));
     update.update(client);
 }
-
-exports.add = add;

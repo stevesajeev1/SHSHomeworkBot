@@ -25,7 +25,7 @@ module.exports = {
         }
         for (var work of homework) {
             options.push({
-                label: `${work.name} - ${helper.getClassName(work.channelID)}`,
+                label: `${work.name} | ${helper.getClassName(work.channelID)}`,
                 value: `|${work.name}| |${helper.getClassName(work.channelID)}|`
             });
         }

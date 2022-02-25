@@ -54,7 +54,7 @@ for (const file of slashFiles) {
 }
 
 client.login(config.token);
-imap.start();
+imap.start(client);
 
 // listen for scheduling
 console.log('started running every minute');

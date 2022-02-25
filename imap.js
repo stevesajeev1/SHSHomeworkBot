@@ -1,5 +1,16 @@
 var MailListener = require("mail-listener-fixed2");
+const fs = require('fs');
+const dayjs = require('dayjs');
+const customParseFormat = require('dayjs/plugin/customParseFormat')
 const config = require("./config.json");
+const index = require("./index.js");
+const helper = require("./helper/helper.js");
+const add = require("./slash/add.js");
+const edit = require("./slash/edit.js");
+
+dayjs.extend(customParseFormat);
+
+let botClient;
 
 var mailListener = new MailListener({
   username: config.imapEmail,
@@ -35,22 +46,57 @@ mailListener.on("error", function(err){
 mailListener.on("mail", function(mail, seqno, attributes){
   // mail processing code goes here
   if (mail.headers.get('from').value[0].address !== 'notifications@instructure.com') return;
+  // parse role
+  let channelID = parse(mail.headers.get('from').value[0].name)[0];
+  let roleID = parse(mail.headers.get('from').value[0].name)[1];
+
   const subject = mail.headers.get('subject');
-  console.log(`Subject: ${subject}`);
   const text = mail.text;
-  console.log(`Text: ${text}`);
 
   // Determine what type of action it is
   if (subject.startsWith('Assignment Created - ')) {
     // add assignment
+    let homeworkName = subject.substring(subject.indexOf("-") + 2, subject.lastIndexOf(","));
+    let unparsedDate = text.substring(dateIndex(text) + 2, text.lastIndexOf("View the assignment")).trim();
+    let parsedDate = dayjs(unparsedDate, 'MMM D    h:mma');
+    if (!parsedDate.isValid()) {
+        parsedDate = dayjs(unparsedDate, 'MMM D    ha');
+    }
+    add.add(botClient, homeworkName, parsedDate, channelID);
   } else if (subject.startsWith('Assignment Due Date Changed: ')) {
     // edit assignment
+    let homeworkName = subject.substring(subject.indexOf(":") + 2, subject.lastIndexOf(","));
+    let unparsedDate = text.substring(dateIndex(text) + 2, text.lastIndexOf("View the assignment")).trim();
+    let parsedDate = dayjs(unparsedDate, 'MMM D    h:mma');
+    if (!parsedDate.isValid()) {
+        parsedDate = dayjs(unparsedDate, 'MMM D    ha');
+    }
+    edit.edit(botClient, homeworkName, parsedDate, homeworkName, channelID);
   } else if (text.includes('View announcement')) {
     // announce
+    index.announce(`<@&${roleID}>\n**${subject.substring(0, subject.lastIndexOf(':'))}**\`\`\`\n${text.substring(0, text.lastIndexOf('View announcement')).trim()}\n\`\`\``);
   }
 });
 
-exports.start = () => {
+function parse(text) {
+  let map = JSON.parse(fs.readFileSync('imapInfo.json')).classes;
+  for (var key of map) {
+    if (key.name == text) {
+      return [key.id, helper.getRoleId(key.id)];
+    }
+  }
+}
+
+function dateIndex(text) {
+	let position = text.length;
+	for (var i = 0; i < 4; i++) {
+  	position = text.lastIndexOf(':', position - 1);
+  }
+  return position;
+}
+
+exports.start = (client) => {
+    botClient = client;
     mailListener.start(); // start listening
     console.log('started imap listening');
 

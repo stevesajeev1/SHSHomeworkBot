@@ -42,7 +42,7 @@ module.exports = {
         let homework = JSON.parse(fs.readFileSync('homework.json'));
         for (var work of homework) {
             options.push({
-                label: `${work.name} - ${helper.getClassName(work.channelID)}`,
+                label: `${work.name} | ${helper.getClassName(work.channelID)}`,
                 value: `|${work.name}| |${helper.getClassName(work.channelID)}|`
             });
         }
@@ -76,7 +76,8 @@ module.exports = {
         edit(client, newName, newDate, oldName, oldClass);
 
         interaction.update({ content: `:white_check_mark: Edited the homework.`, components: [] });
-    }
+    },
+    edit: edit
 };
 
 
@@ -100,5 +101,3 @@ function edit(client, newName, newDate, oldName, oldChannelID) {
     fs.writeFileSync('homework.json', JSON.stringify(homework, null, 2));
     update.update(client)
 }
-
-exports.edit = edit;
