@@ -1,6 +1,8 @@
 const { MessageEmbed } = require('discord.js');
 const fs = require('fs');
 const dayjs = require('dayjs');
+const helper = require('./helper.js');
+const update = require('./update.js');
 
 exports.generateHomework = (channelID, roleID) => {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
@@ -19,12 +21,23 @@ exports.generateHomework = (channelID, roleID) => {
     for (var work of homework) {
         if (work.channelID == channelID) {
             ran = true;
-            homeworkList += `- ${work.name} | ${dayjs(work.dueDate).format('MM/DD/YYYY h:mm A')}\n`
+            let difference = helper.difference(work.dueDate);
+            if (difference == 0) {
+                difference = "Today";
+                update.remind(work, false);
+            } else if (difference == 1) {
+                difference = "Tomorrow";
+                update.remind(work, false);
+            } else {
+                difference += " days";
+            }
+            homeworkList += `- ${work.name} | ${dayjs(work.dueDate).format('MM/DD/YYYY h:mm A')} | ${difference}\n`
         }
     }
     if (!ran) {
-        homeworkList += "Hooray, no homework at this time! 🎉\n```";
+        homeworkList += "Hooray, no homework at this time! 🎉";
     }
+    homeworkList += "\n```";
     homeworkEmbed.setDescription(homeworkList);
     return homeworkEmbed;
 }

@@ -1,4 +1,5 @@
 const homework = require('../helper/homework.js');
+const update = require('../helper/update.js');
 const fs = require('fs');
 
 module.exports = async (client) => {
@@ -27,7 +28,10 @@ module.exports = async (client) => {
     console.log("Setup perms for application (/) commands");
 
     // Check pinned
-    checkPinned(client);
+    await checkPinned(client);
+
+    // Update
+    update.update(client);
 }
 
 async function checkPinned(client) {
@@ -35,7 +39,6 @@ async function checkPinned(client) {
     for (var channel of channels) {
         if (!channel.hasOwnProperty('pinnedID')) {
             let pinned = await client.channels.cache.get(channel.channelID).send({
-                content: `<@&${channel.roleID}>`,
                 embeds: [homework.generateHomework(channel.channelID, channel.roleID)]
             });
             pinned.pin();

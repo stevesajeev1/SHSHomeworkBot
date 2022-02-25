@@ -1,12 +1,30 @@
 module.exports = async (client, interaction) => {
-    // If it's not a command, stop.
-    if (!interaction.isCommand()) return;
-  
-    // Grab the command client.slashcmds Enmap
-    const cmd = client.slashcmds.get(interaction.commandName);
+    // If it is a command
+    if (interaction.isCommand()) {
+      // Grab the command client.slashcmds Enmap
+      const cmd = client.slashcmds.get(interaction.commandName);
+      
+      // If that command doesn't exist, silently exit and do nothing
+      if (!cmd) return;
     
-    // If that command doesn't exist, silently exit and do nothing
-    if (!cmd) return;
-  
-    cmd.run(client, interaction);
+      cmd.run(client, interaction);
+      return;
+    }
+    // If it is a selection menu update
+    if (interaction.isSelectMenu()) {
+      switch (interaction.customId) {
+        case 'addClass': {
+          client.slashcmds.get(interaction.message.interaction.commandName).successfulAddition(client, interaction);
+          break;
+        }
+        case 'editHomework': {
+          client.slashcmds.get(interaction.message.interaction.commandName).successfulEdit(client, interaction);
+          break;
+        }
+      }
+      return;
+    }
+
+    // If it doesn't apply, return
+    return;
   };
