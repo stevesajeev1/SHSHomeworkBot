@@ -35,8 +35,19 @@ mailListener.on("error", function(err){
 mailListener.on("mail", function(mail, seqno, attributes){
   // mail processing code goes here
   if (mail.headers.get('from').value[0].address !== 'notifications@instructure.com') return;
-  console.log(`Subject: ${mail.headers.get('subject')}`);
-  console.log(`Text: ${mail.text}`);
+  const subject = mail.headers.get('subject');
+  console.log(`Subject: ${subject}`);
+  const text = mail.text;
+  console.log(`Text: ${text}`);
+
+  // Determine what type of action it is
+  if (subject.startsWith('Assignment Created - ')) {
+    // add assignment
+  } else if (subject.startsWith('Assignment Due Date Changed: ')) {
+    // edit assignment
+  } else if (text.includes('View announcement')) {
+    // announce
+  }
 });
 
 exports.start = () => {

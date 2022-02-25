@@ -4,7 +4,7 @@ const dayjs = require('dayjs');
 const helper = require('./helper.js');
 const update = require('./update.js');
 
-exports.generateHomework = (channelID, roleID) => {
+exports.generateHomework = (client, channelID, roleID) => {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
     homework.sort(function(a, b) {
         if (a.channelID == b.channelID) {
@@ -24,10 +24,10 @@ exports.generateHomework = (channelID, roleID) => {
             let difference = helper.difference(work.dueDate);
             if (difference == 0) {
                 difference = "Today";
-                update.remind(work, false);
+                update.remind(client, work, false);
             } else if (difference == 1) {
                 difference = "Tomorrow";
-                update.remind(work, false);
+                update.remind(client, work, false);
             } else {
                 difference += " days";
             }

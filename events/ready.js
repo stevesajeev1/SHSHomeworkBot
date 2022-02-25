@@ -39,7 +39,7 @@ async function checkPinned(client) {
     for (var channel of channels) {
         if (!channel.hasOwnProperty('pinnedID')) {
             let pinned = await client.channels.cache.get(channel.channelID).send({
-                embeds: [homework.generateHomework(channel.channelID, channel.roleID)]
+                embeds: [homework.generateHomework(client, channel.channelID, channel.roleID)]
             });
             pinned.pin();
             channel.pinnedID = pinned.id;

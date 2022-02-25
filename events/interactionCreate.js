@@ -21,6 +21,10 @@ module.exports = async (client, interaction) => {
           client.slashcmds.get(interaction.message.interaction.commandName).successfulEdit(client, interaction);
           break;
         }
+        case 'deleteHomework': {
+          client.slashcmds.get(interaction.message.interaction.commandName).successfulDeletion(client, interaction);
+          break;
+        }
       }
       return;
     }

@@ -2,18 +2,19 @@ const homework = require('./homework.js');
 const helper = require('./helper.js');
 const fs = require('fs');
 const index = require('../index.js');
+const deleter = require('../slash/delete.js');
 
 async function update(client) {
     let channels = JSON.parse(fs.readFileSync('channels.json'));
     for (var channel of channels) {
         const pinnedMessage = await client.channels.cache.get(channel.channelID).messages.fetch(channel.pinnedID);
-        pinnedMessage.edit({ embeds: [homework.generateHomework(channel.channelID, channel.roleID)] });
+        pinnedMessage.edit({ embeds: [homework.generateHomework(client, channel.channelID, channel.roleID)] });
     }
 }
 
 exports.update = update;
 
-function remind(homework, dueNow) {
+function remind(client, homework, dueNow) {
     let difference = helper.difference(homework.dueDate);
     if (homework.timesPinged < 2 - difference) {
         if (difference == 0) {
@@ -25,6 +26,7 @@ function remind(homework, dueNow) {
     } else if (dueNow) {
         index.announce(`<@&${helper.getRoleId(homework.channelID)}> \`${homework.name}\` is due **now!**`);
         // delete the homework now
+        deleter.deleteWork(client, homework.name, homework.channelID);
     } else {
         return;
     }

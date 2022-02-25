@@ -58,7 +58,7 @@ schedule.scheduleJob("0 * * ? * *", function() {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
     for (var work of homework) {
         if (now.isSame(dayjs(work.dueDate), 'minute')) {
-            remind(work, true);
+            remind(client, work, true);
         }
     }
 })
