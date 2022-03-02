@@ -62,7 +62,7 @@ schedule.scheduleJob("0 * * ? * *", function() {
     // Updates pinned messages at start of day
     let now = dayjs();
     if (now.hour() == 0 && now.minute() == 0) {
-        update.update();
+        update.update(client);
     }
     
     // Check if time matches any homework
