@@ -62,7 +62,12 @@ mailListener.on("mail", function(mail, seqno, attributes){
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D    ha');
     }
-    add.add(botClient, homeworkName, parsedDate, channelID);
+    // No due date
+    if (!parsedDate.isValid()) {
+      add.add(botClient, homeworkName, null, channelID);
+    } else {
+      add.add(botClient, homeworkName, parsedDate, channelID);
+    }
   } else if (subject.startsWith('Assignment Due Date Changed: ')) {
     // edit assignment
     let homeworkName = subject.substring(subject.indexOf(":") + 2, subject.lastIndexOf(","));

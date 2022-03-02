@@ -64,14 +64,23 @@ module.exports = {
 
 function add(client, homeworkName, date, channelID) {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
-    let difference = helper.difference(date);
-    difference = difference >= 2 ? difference = 2 : difference;
-    homework.push({
-        name: homeworkName,
-        dueDate: date,
-        channelID: channelID,
-        timesPinged: Math.max(0, 1 - difference)
-    })
+    if (date == null) {
+        homework.push({
+            name: homeworkName,
+            dueDate: date,
+            channelID: channelID,
+            timesPinged: 0
+        })
+    } else {
+        let difference = helper.difference(date);
+        difference = difference >= 2 ? difference = 2 : difference;
+        homework.push({
+            name: homeworkName,
+            dueDate: date,
+            channelID: channelID,
+            timesPinged: Math.max(0, 1 - difference)
+        })
+    }
     fs.writeFileSync('homework.json', JSON.stringify(homework, null, 2));
     update.update(client);
 }

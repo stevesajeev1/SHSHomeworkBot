@@ -21,17 +21,21 @@ exports.generateHomework = (client, channelID, roleID) => {
     for (var work of homework) {
         if (work.channelID == channelID) {
             ran = true;
-            let difference = helper.difference(work.dueDate);
-            if (difference == 0) {
-                difference = "Today";
-                update.remind(client, work, false);
-            } else if (difference == 1) {
-                difference = "Tomorrow";
-                update.remind(client, work, false);
+            if (work.dueDate == null) {
+                homeworkList += `- ${work.name} | No due date\n`
             } else {
-                difference += " days";
+                let difference = helper.difference(work.dueDate);
+                if (difference == 0) {
+                    difference = "Today";
+                    update.remind(client, work, false);
+                } else if (difference == 1) {
+                    difference = "Tomorrow";
+                    update.remind(client, work, false);
+                } else {
+                    difference += " days";
+                }
+                homeworkList += `- ${work.name} | ${dayjs(work.dueDate).format('MM/DD/YYYY h:mm A')} | ${difference}\n`
             }
-            homeworkList += `- ${work.name} | ${dayjs(work.dueDate).format('MM/DD/YYYY h:mm A')} | ${difference}\n`
         }
     }
     if (!ran) {
