@@ -41,6 +41,8 @@ mailListener.on("server:disconnected", function(){
 
 mailListener.on("error", function(err){
   console.log(err);
+  mailListener.start(); // start listening
+  console.log('reconnected');
 });
 
 mailListener.on("mail", function(mail, seqno, attributes){
