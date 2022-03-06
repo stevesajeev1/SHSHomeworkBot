@@ -41,6 +41,24 @@ mailListener.on("server:disconnected", function(){
 
 mailListener.on("error", function(err){
   console.log(err);
+  mailListener = new MailListener({
+    username: config.imapEmail,
+    password: config.imapPassword,
+    host: "imap.gmail.com",
+    port: 993, // imap port
+    tls: true,
+    connTimeout: 10000, // Default by node-imap
+    authTimeout: 5000, // Default by node-imap,
+    debug: null, // Or your custom function with only one incoming argument. Default: null
+    tlsOptions: { rejectUnauthorized: false },
+    mailbox: "INBOX", // mailbox to monitor
+    searchFilter: ["UNSEEN", "FLAGGED"], // the search filter being used after an IDLE notification has been retrieved
+    markSeen: true, // all fetched email will be marked as seen and not fetched next time
+    fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
+    mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
+    attachments: false, // download attachments as they are encountered to the project directory
+    attachmentOptions: { directory: "attachments/" } // specify a download directory for attachments
+  });
   mailListener.start(); // start listening
   console.log('reconnected');
 });
@@ -78,7 +96,12 @@ mailListener.on("mail", function(mail, seqno, attributes){
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D    ha');
     }
-    edit.edit(botClient, homeworkName, parsedDate, homeworkName, channelID);
+    // No due date
+    if (!parsedDate.isValid()) {
+      edit.edit(botClient, homeworkName, 'none', homeworkName, channelID);
+    } else {
+      edit.edit(botClient, homeworkName, parsedDate, homeworkName, channelID);
+    }
   } else if (text.includes('View announcement')) {
     // announce
     index.announce(`<@&${roleID}>\n**${subject.substring(0, subject.lastIndexOf(':'))}**\`\`\`\n${text.substring(0, text.lastIndexOf('View announcement')).trim()}\n\`\`\``);

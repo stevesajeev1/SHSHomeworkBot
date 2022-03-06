@@ -89,11 +89,16 @@ function edit(client, newName, newDate, oldName, oldChannelID) {
                 homework[i].name = newName;
             } 
             if (newDate) {
-                let date = dayjs(newDate);
-                let difference = helper.difference(date);
-                difference = difference >= 2 ? difference = 2 : difference;
-                homework[i].dueDate = date;
-                homework[i].timesPinged = Math.max(0, 1 - difference);
+                if (date == 'none') {
+                    homework[i].dueDate = null;
+                    homework[i].timesPinged = 0;
+                } else {
+                    let date = dayjs(newDate);
+                    let difference = helper.difference(date);
+                    difference = difference >= 2 ? difference = 2 : difference;
+                    homework[i].dueDate = date;
+                    homework[i].timesPinged = Math.max(0, 1 - difference);
+                }
             }
             break;
         }
