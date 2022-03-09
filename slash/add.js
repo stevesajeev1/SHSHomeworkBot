@@ -16,20 +16,23 @@ module.exports = {
         .addStringOption(option => 
             option.setName('date')
                 .setDescription('due date of homework')
-                .setRequired(true))
+                .setRequired(false))
         .setDefaultPermission(false),
 	async run(client, interaction) {
 		await interaction.deferReply({ ephemeral: true });
 
         // do stuff
         let name = interaction.options.getString('name');
-        let date = interaction.options.getString('date');
+        let date;
+        if (interaction.options.getString('date')) {
+            date = interaction.options.getString('date');
 
-        if (!helper.validDate(date)) {
-            interaction.editReply(`<:error:946520648103108630> \`${date}\` is not a valid date. **Ensure** dates are after now and are in a regular format.`);
-            return;
+            if (!helper.validDate(date)) {
+                interaction.editReply(`<:error:946520648103108630> \`${date}\` is not a valid date. **Ensure** dates are after now and are in a regular format.`);
+                return;
+            }
+            date = helper.validDate(date);
         }
-        date = helper.validDate(date);
 
         // create selection menu for classes
         // first generate the options
@@ -50,14 +53,14 @@ module.exports = {
 					.addOptions(options)
                     .setMaxValues(1)
 			);
-        interaction.editReply({ content: `**Name**: \`${name}\` **Date**: \`${date.format('MM/DD/YYYY h:mm A')}\``, components: [row]});
+        interaction.editReply({ content: `**Name**: \`${name}\` **Date**: \`${date ? date.format('MM/DD/YYYY h:mm A') : 'No due date'}\``, components: [row]});
 	},
     async successfulAddition(client, interaction) {
         const initialContent = interaction.message.content;
         const homeworkName = helper.extract(initialContent, '`')[0];
         const date = dayjs(helper.extract(initialContent, '`')[1]);
-        interaction.update({ content: `:white_check_mark: Added \`${homeworkName}\` due \`${date.format('MM/DD/YYYY h:mm A')}\` for \`${helper.getClassName(interaction.values[0])}\``, components: [] });
-        add(client, homeworkName, date, interaction.values[0]);
+        interaction.update({ content: `:white_check_mark: Added \`${homeworkName}\` due \`${date.isValid() ? date.format('MM/DD/YYYY h:mm A') : 'N/A'}\` for \`${helper.getClassName(interaction.values[0])}\``, components: [] });
+        add(client, homeworkName, date.isValid() ? date : null, interaction.values[0]);
     },
     add: add
 };
