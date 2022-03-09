@@ -49,7 +49,8 @@ module.exports = {
         deleteWork(client, oldName, oldClass);
 
         interaction.update({ content: `:white_check_mark: Deleted the homework.`, components: [] });
-    }
+    },
+    deleteWork: deleteWork
 };
 
 
@@ -64,5 +65,3 @@ function deleteWork(client, oldName, oldChannelID) {
     fs.writeFileSync('homework.json', JSON.stringify(homework, null, 2));
     update.update(client);
 }
-
-exports.deleteWork = deleteWork;

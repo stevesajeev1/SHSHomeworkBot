@@ -14,9 +14,12 @@ async function update(client) {
 
 exports.update = update;
 
-function remind(client, homework, dueNow) {
+function remind(client, homework, dueNow, expired) {
     let difference = helper.difference(homework.dueDate);
-    if (homework.timesPinged < 2 - difference) {
+    if (expired) {
+        // delete the homework now
+        deleter.deleteWork(client, homework.name, homework.channelID);
+    } else if (homework.timesPinged < 2 - difference) {
         if (difference == 0) {
             difference = "today";
         } else if (difference == 1) {

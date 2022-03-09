@@ -27,10 +27,13 @@ exports.generateHomework = (client, channelID, roleID) => {
                 let difference = helper.difference(work.dueDate);
                 if (difference == 0) {
                     difference = "Today";
-                    update.remind(client, work, false);
+                    update.remind(client, work, false, false);
                 } else if (difference == 1) {
                     difference = "Tomorrow";
-                    update.remind(client, work, false);
+                    update.remind(client, work, false, false);
+                } else if (difference < 0) {
+                    update.remind(client, work, false, true);
+                    continue;
                 } else {
                     difference += " days";
                 }

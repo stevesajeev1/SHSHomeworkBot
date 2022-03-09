@@ -89,7 +89,7 @@ function edit(client, newName, newDate, oldName, oldChannelID) {
                 homework[i].name = newName;
             } 
             if (newDate) {
-                if (date == 'none') {
+                if (newDate == 'none') {
                     homework[i].dueDate = null;
                     homework[i].timesPinged = 0;
                 } else {

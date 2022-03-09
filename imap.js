@@ -28,7 +28,12 @@ var mailListener = new MailListener({
   fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
   mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
   attachments: false, // download attachments as they are encountered to the project directory
-  attachmentOptions: { directory: "attachments/" } // specify a download directory for attachments
+  attachmentOptions: { directory: "attachments/" }, // specify a download directory for attachments
+  keepalive: {
+    interval : 10000,
+    idleInterval: 60000,
+    forceNoop: true
+  }
 });
 
 mailListener.on("server:connected", function(){
@@ -57,7 +62,12 @@ mailListener.on("error", function(err){
     fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
     mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
     attachments: false, // download attachments as they are encountered to the project directory
-    attachmentOptions: { directory: "attachments/" } // specify a download directory for attachments
+    attachmentOptions: { directory: "attachments/" }, // specify a download directory for attachments
+    keepalive: {
+      interval : 10000,
+      idleInterval: 60000,
+      forceNoop: true
+    }
   });
   mailListener.start(); // start listening
   console.log('reconnected');
@@ -77,7 +87,7 @@ mailListener.on("mail", function(mail, seqno, attributes){
   if (subject.startsWith('Assignment Created - ')) {
     // add assignment
     let homeworkName = subject.substring(subject.indexOf("-") + 2, subject.lastIndexOf(","));
-    let unparsedDate = text.substring(dateIndex(text) + 2, text.lastIndexOf("View the assignment")).trim();
+    let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("View the assignment")).trim();
     let parsedDate = dayjs(unparsedDate, 'MMM D    h:mma');
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D    ha');
@@ -91,7 +101,7 @@ mailListener.on("mail", function(mail, seqno, attributes){
   } else if (subject.startsWith('Assignment Due Date Changed: ')) {
     // edit assignment
     let homeworkName = subject.substring(subject.indexOf(":") + 2, subject.lastIndexOf(","));
-    let unparsedDate = text.substring(dateIndex(text) + 2, text.lastIndexOf("View the assignment")).trim();
+    let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("View the assignment")).trim();
     let parsedDate = dayjs(unparsedDate, 'MMM D    h:mma');
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D    ha');
@@ -115,14 +125,6 @@ function parse(text) {
       return [key.id, helper.getRoleId(key.id)];
     }
   }
-}
-
-function dateIndex(text) {
-	let position = text.length;
-	for (var i = 0; i < 4; i++) {
-  	position = text.lastIndexOf(':', position - 1);
-  }
-  return position;
 }
 
 exports.start = (client) => {
