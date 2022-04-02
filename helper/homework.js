@@ -8,7 +8,8 @@ exports.generateHomework = (client, channelID, roleID) => {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
     homework.sort(function(a, b) {
         if (a.channelID == b.channelID) {
-            return a.dueDate - b.dueDate;
+            let diff = dayjs(a.dueDate).diff(b.dueDate, 'day');
+            return diff == 0 ? a.name.localeCompare(b.name) : diff;
         } else {
             return a.channelID.localeCompare(b.channelID);
         }

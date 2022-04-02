@@ -9,7 +9,7 @@ const client = new Client({
     Intents.FLAGS.GUILD_MESSAGE_TYPING,
     Intents.FLAGS.DIRECT_MESSAGES,
     Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-    Intents.FLAGS.DIRECT_MESSAGE_TYPING,
+    Intents.FLAGS.DIRECT_MESSAGE_TYPING
   ],
   partials: [
       'CHANNEL', // Required to receive DMs
@@ -76,4 +76,10 @@ schedule.scheduleJob("0 * * ? * *", function() {
 
 exports.announce = (text) => {
   client.channels.cache.get(config.announcement).send(text);
+}
+
+exports.debug = (text) => {
+  client.users.fetch(config.ownerID, false).then((user) => {
+    user.send('```\n' + text + '\n```');
+  });
 }

@@ -12,6 +12,10 @@ module.exports = {
             option.setName('text')
                 .setDescription('text to announce')
                 .setRequired(true))
+        .addStringOption(option => 
+             option.setName('title')
+                .setDescription('title of announcement')
+                .setRequired(false))
         .setDefaultPermission(false),
 	async run(client, interaction) {
 		await interaction.deferReply({ ephemeral: true });
@@ -37,14 +41,16 @@ module.exports = {
 					.addOptions(options)
                     .setMaxValues(1)
 			);
-        interaction.editReply({ content: `**Text**: \`\`\`\n${interaction.options.getString('text')}\n\`\`\``, components: [row]});
+        let title = interaction.options.getString('title') ? `**Title**: \`\`\`\n${interaction.options.getString('title')}\n\`\`\`` : '';
+        interaction.editReply({ content: `${title}**Text**: \`\`\`\n${interaction.options.getString('text')}\n\`\`\``, components: [row]});
 	},
     async successfulAnnouncement(client, interaction) {
         const initialContent = interaction.message.content;
-        const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
+        const title = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
+        const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[1];
         const roleID = interaction.values[0];
         
-        index.announce(`<@&${roleID}> \n\`\`\`\n${text}\n\`\`\``);
+        index.announce(`<@&${roleID}>**${title}**\`\`\`\n${text}\n\`\`\``);
 
         interaction.update({ content: `:white_check_mark: Successfully made the announcement. `, components: [] });
     }

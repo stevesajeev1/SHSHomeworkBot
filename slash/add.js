@@ -67,6 +67,14 @@ module.exports = {
 
 function add(client, homeworkName, date, channelID) {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
+    homework.sort(function(a, b) {
+        if (a.channelID == b.channelID) {
+            let diff = dayjs(a.dueDate).diff(b.dueDate, 'day');
+            return diff == 0 ? a.name.localeCompare(b.name) : diff;
+        } else {
+            return a.channelID.localeCompare(b.channelID);
+        }
+    });
     if (date == null) {
         homework.push({
             name: homeworkName,

@@ -3,6 +3,7 @@ const { MessageActionRow, MessageSelectMenu } = require('discord.js');
 const fs = require('fs');
 const helper = require('../helper/helper.js');
 const update = require('../helper/update.js');
+const dayjs = require('dayjs');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -56,6 +57,14 @@ module.exports = {
 
 function deleteWork(client, oldName, oldChannelID) {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
+    homework.sort(function(a, b) {
+        if (a.channelID == b.channelID) {
+            let diff = dayjs(a.dueDate).diff(b.dueDate, 'day');
+            return diff == 0 ? a.name.localeCompare(b.name) : diff;
+        } else {
+            return a.channelID.localeCompare(b.channelID);
+        }
+    });
     for (var i = 0; i < homework.length; i++) {
         if (homework[i].name == oldName && homework[i].channelID == oldChannelID) {
             homework.splice(i, 1);

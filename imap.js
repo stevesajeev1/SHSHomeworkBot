@@ -29,51 +29,40 @@ var mailListener = new MailListener({
   mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
   attachments: false, // download attachments as they are encountered to the project directory
   attachmentOptions: { directory: "attachments/" }, // specify a download directory for attachments
-  keepalive: {
-    interval : 10000,
-    idleInterval: 60000,
-    forceNoop: true
-  }
 });
 
-mailListener.on("server:connected", function(){
-  console.log("imapConnected");
-});
-
-mailListener.on("server:disconnected", function(){
-  console.log("imapDisconnected");
-});
-
-mailListener.on("error", function(err){
+function error (err){
   console.log(err);
-  mailListener = new MailListener({
-    username: config.imapEmail,
-    password: config.imapPassword,
-    host: "imap.gmail.com",
-    port: 993, // imap port
-    tls: true,
-    connTimeout: 10000, // Default by node-imap
-    authTimeout: 5000, // Default by node-imap,
-    debug: null, // Or your custom function with only one incoming argument. Default: null
-    tlsOptions: { rejectUnauthorized: false },
-    mailbox: "INBOX", // mailbox to monitor
-    searchFilter: ["UNSEEN", "FLAGGED"], // the search filter being used after an IDLE notification has been retrieved
-    markSeen: true, // all fetched email will be marked as seen and not fetched next time
-    fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
-    mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
-    attachments: false, // download attachments as they are encountered to the project directory
-    attachmentOptions: { directory: "attachments/" }, // specify a download directory for attachments
-    keepalive: {
-      interval : 10000,
-      idleInterval: 60000,
-      forceNoop: true
-    }
-  });
+  mailListener.stop();
+  // mailListener = new MailListener({
+  //   username: config.imapEmail,
+  //   password: config.imapPassword,
+  //   host: "imap.gmail.com",
+  //   port: 993, // imap port
+  //   tls: true,
+  //   connTimeout: 10000, // Default by node-imap
+  //   authTimeout: 5000, // Default by node-imap,
+  //   debug: null, // Or your custom function with only one incoming argument. Default: null
+  //   tlsOptions: { rejectUnauthorized: false },
+  //   mailbox: "INBOX", // mailbox to monitor
+  //   searchFilter: ["UNSEEN", "FLAGGED"], // the search filter being used after an IDLE notification has been retrieved
+  //   markSeen: true, // all fetched email will be marked as seen and not fetched next time
+  //   fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
+  //   mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
+  //   attachments: false, // download attachments as they are encountered to the project directory
+  //   attachmentOptions: { directory: "attachments/" }, // specify a download directory for attachments
+  //   keepalive: {
+  //     interval : 10000,
+  //     idleInterval: 60000,
+  //     forceNoop: true
+  //   }
+  // });
   mailListener.start(); // start listening
+  // createListener(mailListener);
   console.log('reconnected');
-});
+};
 
-mailListener.on("mail", function(mail, seqno, attributes){
+function mail(mail, seqno, attributes) {
   // mail processing code goes here
   if (mail.headers.get('from').value[0].address !== 'notifications@instructure.com') return;
   // parse role
@@ -82,16 +71,19 @@ mailListener.on("mail", function(mail, seqno, attributes){
 
   const subject = mail.headers.get('subject');
   const text = mail.text;
+  // index.debug(text);
 
   // Determine what type of action it is
   if (subject.startsWith('Assignment Created - ')) {
     // add assignment
-    let homeworkName = subject.substring(subject.indexOf("-") + 2, subject.lastIndexOf(","));
-    let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("View the assignment")).trim();
-    let parsedDate = dayjs(unparsedDate, 'MMM D    h:mma');
+    let homeworkName = subject.substring(subject.indexOf("-") + 2, subject.lastIndexOf(",")).trim();
+    let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("Click")).trim().replace('at', '').replace(/\s\s+/g, ' ');
+    // index.debug("Unparsed: " + unparsedDate);
+    let parsedDate = dayjs(unparsedDate, 'MMM D h:mma');
     if (!parsedDate.isValid()) {
-        parsedDate = dayjs(unparsedDate, 'MMM D    ha');
+        parsedDate = dayjs(unparsedDate, 'MMM D ha');
     }
+    // index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
     // No due date
     if (!parsedDate.isValid()) {
       add.add(botClient, homeworkName, null, channelID);
@@ -100,23 +92,25 @@ mailListener.on("mail", function(mail, seqno, attributes){
     }
   } else if (subject.startsWith('Assignment Due Date Changed: ')) {
     // edit assignment
-    let homeworkName = subject.substring(subject.indexOf(":") + 2, subject.lastIndexOf(","));
-    let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("View the assignment")).trim();
-    let parsedDate = dayjs(unparsedDate, 'MMM D    h:mma');
+    let homeworkName = subject.substring(subject.indexOf(":") + 2, subject.lastIndexOf(",")).trim();
+    let unparsedDate = text.substring(text.lastIndexOf("to:") + 3, text.lastIndexOf("Click")).trim().replace('at', '').replace(/\s\s+/g, ' ');
+    // index.debug("Unparsed: " + unparsedDate);
+    let parsedDate = dayjs(unparsedDate, 'MMM D h:mma');
     if (!parsedDate.isValid()) {
-        parsedDate = dayjs(unparsedDate, 'MMM D    ha');
+        parsedDate = dayjs(unparsedDate, 'MMM D ha');
     }
+    // index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
     // No due date
     if (!parsedDate.isValid()) {
       edit.edit(botClient, homeworkName, 'none', homeworkName, channelID);
     } else {
       edit.edit(botClient, homeworkName, parsedDate, homeworkName, channelID);
     }
-  } else if (text.includes('View announcement')) {
+  } else if (text.includes('/announcements/')) {
     // announce
-    index.announce(`<@&${roleID}>\n**${subject.substring(0, subject.lastIndexOf(':'))}**\`\`\`\n${text.substring(0, text.lastIndexOf('View announcement')).trim()}\n\`\`\``);
+    index.announce(`<@&${roleID}>\n**${subject.substring(0, subject.lastIndexOf(':'))}**\`\`\`\n${text.substring(0, text.lastIndexOf('________________________________________')).trim()}\n\`\`\``);
   }
-});
+};
 
 function parse(text) {
   let map = JSON.parse(fs.readFileSync('imapInfo.json')).classes;
@@ -127,9 +121,15 @@ function parse(text) {
   }
 }
 
+function createListener(mailListener) {
+  mailListener.on('mail', mail);
+  mailListener.on('error', error);
+}
+
 exports.start = (client) => {
     botClient = client;
     mailListener.start(); // start listening
+    createListener(mailListener);
     console.log('started imap listening');
 
     // stop listening

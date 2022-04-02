@@ -83,6 +83,14 @@ module.exports = {
 
 function edit(client, newName, newDate, oldName, oldChannelID) {
     let homework = JSON.parse(fs.readFileSync('homework.json'));
+    homework.sort(function(a, b) {
+        if (a.channelID == b.channelID) {
+            let diff = dayjs(a.dueDate).diff(b.dueDate, 'day');
+            return diff == 0 ? a.name.localeCompare(b.name) : diff;
+        } else {
+            return a.channelID.localeCompare(b.channelID);
+        }
+    });
     for (var i = 0; i < homework.length; i++) {
         if (homework[i].name == oldName && homework[i].channelID == oldChannelID) {
             if (newName) {
