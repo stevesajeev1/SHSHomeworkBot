@@ -55,7 +55,7 @@ module.exports = {
 			);
         interaction.editReply({ content: `**Name**: \`${name}\` **Date**: \`${date ? date.format('MM/DD/YYYY h:mm A') : 'No due date'}\``, components: [row]});
 	},
-    async successfulAddition(client, interaction) {
+    async selectionMenu(client, interaction) {
         const initialContent = interaction.message.content;
         const homeworkName = helper.extract(initialContent, '`')[0];
         const date = dayjs(helper.extract(initialContent, '`')[1]);

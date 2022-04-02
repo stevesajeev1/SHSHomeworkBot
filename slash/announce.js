@@ -44,7 +44,7 @@ module.exports = {
         let title = interaction.options.getString('title') ? `**Title**: \`\`\`\n${interaction.options.getString('title')}\n\`\`\`` : '';
         interaction.editReply({ content: `${title}**Text**: \`\`\`\n${interaction.options.getString('text')}\n\`\`\``, components: [row]});
 	},
-    async successfulAnnouncement(client, interaction) {
+    async selectionMenu(client, interaction) {
         const initialContent = interaction.message.content;
         const title = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
         const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[1];

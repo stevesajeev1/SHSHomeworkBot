@@ -43,7 +43,7 @@ module.exports = {
         interaction.editReply({ components: [row]});
 	},
     
-    async successfulDeletion(client, interaction) {
+    async selectionMenu(client, interaction) {
         const oldName = helper.extract(interaction.values[0], '|')[0];
         const oldClass = helper.getChannelId(helper.extract(interaction.values[0], '|')[1]);
         

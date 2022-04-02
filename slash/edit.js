@@ -58,7 +58,7 @@ module.exports = {
         
         interaction.editReply({ content: header, components: [row]});
 	},
-    async successfulEdit(client, interaction) {
+    async selectionMenu(client, interaction) {
         const initialContent = interaction.message.content;
         let newName = "";
         let newDate = "";
