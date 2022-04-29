@@ -7,26 +7,7 @@ module.exports = async (client) => {
     client.user.setActivity('for new assignments! |', { type: 'WATCHING' });
     client.user.setStatus('online');
     console.log(`Ready to serve in ${client.channels.cache.size} channels on ${client.guilds.cache.size} servers, for a total of ${client.users.cache.size} users.`);
-
-    // Setup slash commands
-    let permissions = [];
-    for (var mod of client.config.mods) {
-        permissions.push({
-            id: mod,
-            type: 'USER',
-            permission: true
-        })
-    }
-    const guild = await client.guilds.fetch(client.config.guildID);
-    const commandList = await guild.commands.fetch();
-    commandList.forEach(slashCommand => {
-        guild.commands.permissions.add({
-            command: slashCommand.id,
-            permissions: permissions
-        })
-    })
-    console.log("Setup perms for application (/) commands");
-
+    
     // Check pinned
     await checkPinned(client);
 

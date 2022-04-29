@@ -11,6 +11,7 @@ const edit = require("./slash/edit.js");
 dayjs.extend(customParseFormat);
 
 let botClient;
+let debugging;
 
 var mailListener = new MailListener({
   username: config.imapEmail,
@@ -70,20 +71,27 @@ function mail(mail, seqno, attributes) {
   let roleID = parse(mail.headers.get('from').value[0].name)[1];
 
   const subject = mail.headers.get('subject');
+  console.log(subject);
   const text = mail.text;
-  // index.debug(text);
+  if (debugging) {
+    index.debug(text);
+  }
 
   // Determine what type of action it is
   if (subject.startsWith('Assignment Created - ')) {
     // add assignment
     let homeworkName = subject.substring(subject.indexOf("-") + 2, subject.lastIndexOf(",")).trim();
-    let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("Click")).trim().replace('at', '').replace(/\s\s+/g, ' ');
-    // index.debug("Unparsed: " + unparsedDate);
+    let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("Click")).trim().replace(' at ', ' ').replace(/  +/g, ' ');
+    if (debugging) {
+      index.debug("Unparsed: " + unparsedDate);
+    }
     let parsedDate = dayjs(unparsedDate, 'MMM D h:mma');
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D ha');
     }
-    // index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
+    if (debugging) {
+      index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
+    }
     // No due date
     if (!parsedDate.isValid()) {
       add.add(botClient, homeworkName, null, channelID);
@@ -93,13 +101,17 @@ function mail(mail, seqno, attributes) {
   } else if (subject.startsWith('Assignment Due Date Changed: ')) {
     // edit assignment
     let homeworkName = subject.substring(subject.indexOf(":") + 2, subject.lastIndexOf(",")).trim();
-    let unparsedDate = text.substring(text.lastIndexOf("to:") + 3, text.lastIndexOf("Click")).trim().replace('at', '').replace(/\s\s+/g, ' ');
-    // index.debug("Unparsed: " + unparsedDate);
+    let unparsedDate = text.substring(text.lastIndexOf("to:") + 3, text.lastIndexOf("Click")).trim().replace(' at ', ' ').replace(/  +/g, ' ');
+    if (debugging) {
+      index.debug("Unparsed: " + unparsedDate);
+    }
     let parsedDate = dayjs(unparsedDate, 'MMM D h:mma');
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D ha');
     }
-    // index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
+    if (debugging) {
+      index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
+    }
     // No due date
     if (!parsedDate.isValid()) {
       edit.edit(botClient, homeworkName, 'none', homeworkName, channelID);
@@ -109,6 +121,8 @@ function mail(mail, seqno, attributes) {
   } else if (text.includes('/announcements/')) {
     // announce
     index.announce(`<@&${roleID}>\n**${subject.substring(0, subject.lastIndexOf(':'))}**\`\`\`\n${text.substring(0, text.lastIndexOf('________________________________________')).trim()}\n\`\`\``);
+  } else {
+    index.debug(subject);
   }
 };
 
@@ -126,8 +140,9 @@ function createListener(mailListener) {
   mailListener.on('error', error);
 }
 
-exports.start = (client) => {
+exports.start = (client, debug) => {
     botClient = client;
+    debugging = debug;
     mailListener.start(); // start listening
     createListener(mailListener);
     console.log('started imap listening');

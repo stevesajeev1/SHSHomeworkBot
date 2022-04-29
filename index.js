@@ -54,7 +54,10 @@ for (const file of slashFiles) {
 }
 
 client.login(config.token);
-imap.start(client);
+if (process.argv.includes('--debug')) {
+  console.log('\x1b[33m%s\x1b[0m', 'Debugging Mode');
+}
+imap.start(client, process.argv.includes('--debug'));
 
 // listen for scheduling
 console.log('started running every minute');

@@ -13,6 +13,12 @@ module.exports = {
 	async run(client, interaction) {
 		await interaction.deferReply({ ephemeral: true });
 
+        // check if mod
+        if (!client.config.mods.includes(interaction.user.id)) {
+            interaction.editReply(`<:error:946520648103108630> You are not a mod! DM ${client.users.cache.get(client.config.ownerID)} if you want to apply!`);
+            return;
+        }
+        
         // do stuff
         
         // generate list of homeworks in system
