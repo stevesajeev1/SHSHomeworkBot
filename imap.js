@@ -1,4 +1,4 @@
-var MailListener = require("mail-listener-fixed2");
+const notifier = require("mail-notifier");
 const fs = require('fs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat')
@@ -13,7 +13,7 @@ dayjs.extend(customParseFormat);
 let botClient;
 let debugging;
 
-var mailListener = new MailListener({
+const imap = {
   username: config.imapEmail,
   password: config.imapPassword,
   host: "imap.gmail.com",
@@ -30,47 +30,16 @@ var mailListener = new MailListener({
   mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
   attachments: false, // download attachments as they are encountered to the project directory
   attachmentOptions: { directory: "attachments/" }, // specify a download directory for attachments
-});
+}
 
-function error (err){
-  console.log(err);
-  mailListener.stop();
-  // mailListener = new MailListener({
-  //   username: config.imapEmail,
-  //   password: config.imapPassword,
-  //   host: "imap.gmail.com",
-  //   port: 993, // imap port
-  //   tls: true,
-  //   connTimeout: 10000, // Default by node-imap
-  //   authTimeout: 5000, // Default by node-imap,
-  //   debug: null, // Or your custom function with only one incoming argument. Default: null
-  //   tlsOptions: { rejectUnauthorized: false },
-  //   mailbox: "INBOX", // mailbox to monitor
-  //   searchFilter: ["UNSEEN", "FLAGGED"], // the search filter being used after an IDLE notification has been retrieved
-  //   markSeen: true, // all fetched email will be marked as seen and not fetched next time
-  //   fetchUnreadOnStart: true, // use it only if you want to get all unread email on lib start. Default is `false`,
-  //   mailParserOptions: {streamAttachments: true}, // options to be passed to mailParser lib.
-  //   attachments: false, // download attachments as they are encountered to the project directory
-  //   attachmentOptions: { directory: "attachments/" }, // specify a download directory for attachments
-  //   keepalive: {
-  //     interval : 10000,
-  //     idleInterval: 60000,
-  //     forceNoop: true
-  //   }
-  // });
-  mailListener.start(); // start listening
-  // createListener(mailListener);
-  console.log('reconnected');
-};
-
-function mail(mail, seqno, attributes) {
+function mail(mail) {
   // mail processing code goes here
-  if (mail.headers.get('from').value[0].address !== 'notifications@instructure.com') return;
+  if (mail.from[0].address !== 'notifications@instructure.com') return;
   // parse role
-  let channelID = parse(mail.headers.get('from').value[0].name)[0];
-  let roleID = parse(mail.headers.get('from').value[0].name)[1];
+  let channelID = parse(mail.from[0].name)[0];
+  let roleID = parse(mail.from[0].name)[1];
 
-  const subject = mail.headers.get('subject');
+  const subject = mail.subject;
   console.log(subject);
   const text = mail.text;
   if (debugging) {
@@ -78,6 +47,8 @@ function mail(mail, seqno, attributes) {
   }
 
   // Determine what type of action it is
+  if (subject.startsWith("Updated Page: ")) return;
+
   if (subject.startsWith('Assignment Created - ')) {
     // add assignment
     let homeworkName = subject.substring(subject.indexOf("-") + 2, subject.lastIndexOf(",")).trim();
@@ -135,16 +106,16 @@ function parse(text) {
   }
 }
 
-function createListener(mailListener) {
-  mailListener.on('mail', mail);
-  mailListener.on('error', error);
-}
-
 exports.start = (client, debug) => {
     botClient = client;
     debugging = debug;
-    mailListener.start(); // start listening
-    createListener(mailListener);
+    const n = notifier(imap);
+    n.on('end', () => n.start()) // session closed
+      .on('mail', m => {
+        mail(m);
+      })
+      .on('error', () => n.start())
+      .start();
     console.log('started imap listening');
 
     // stop listening

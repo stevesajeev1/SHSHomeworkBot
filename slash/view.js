@@ -20,7 +20,11 @@ module.exports = {
         let homeworkDescription = "";
         for (var className of classes) {
             if (interaction.member.roles.cache.has(className.roleID)) {
-                homeworkDescription += homework.generateHomework(client, className.channelID, className.roleID).description + "\n";
+                let hw = homework.generateHomework(client, className.channelID, className.roleID).description + "\n";
+                if (!hw.includes("Hooray, no homework at this time! 🎉")) {
+                    homeworkDescription += hw;
+                }
+                // homeworkDescription += homework.generateHomework(client, className.channelID, className.roleID).description + "\n";
             }
         }
         homeworkEmbed.setDescription(homeworkDescription);

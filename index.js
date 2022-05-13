@@ -78,7 +78,10 @@ schedule.scheduleJob("0 * * ? * *", function() {
 })
 
 exports.announce = (text) => {
-  client.channels.cache.get(config.announcement).send(text);
+  const chunks = text.match(/.{1,2000}(\s|$)/g);
+  for (const chunk of chunks) {
+    client.channels.cache.get(config.announcement).send(chunk);
+  }
 }
 
 exports.debug = (text) => {
