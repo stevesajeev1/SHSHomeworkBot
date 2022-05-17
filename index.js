@@ -77,18 +77,10 @@ schedule.scheduleJob("0 * * ? * *", function() {
     }
 })
 
-exports.announce = (text) => {
-  const chunks = text.match(/.{1,1992}(\s|$)/g);
-  for (var i = 0; i < chunks.length; i++) {
-    let chunk = chunks[i];
-    if (i != 0) {
-      chunk = "```\n" + chunk;
-    }
-    if (i != chunks.length - 1) {
-      chunk += "\n```";
-    }
-    client.channels.cache.get(config.announcement).send(chunk);
-  }
+exports.announce = (text) => {t
+  try {
+    client.channels.cache.get(config.announcement).send(text);
+  } catch (e) {}
 }
 
 exports.debug = (text) => {
