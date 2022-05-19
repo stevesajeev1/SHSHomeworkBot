@@ -77,7 +77,7 @@ schedule.scheduleJob("0 * * ? * *", function() {
     }
 })
 
-exports.announce = (text) => {t
+exports.announce = (text) => {
   try {
     client.channels.cache.get(config.announcement).send(text);
   } catch (e) {}
