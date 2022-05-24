@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageActionRow, MessageSelectMenu } = require('discord.js');
+const { MessageActionRow, MessageSelectMenu, Modal, TextInputComponent } = require('discord.js');
 const fs = require('fs');
 const helper = require('../helper/helper.js');
 const index = require('../index.js');
@@ -8,14 +8,6 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('announce')
 		.setDescription('school announcement')
-        .addStringOption(option => 
-            option.setName('text')
-                .setDescription('text to announce')
-                .setRequired(true))
-        .addStringOption(option => 
-             option.setName('title')
-                .setDescription('title of announcement')
-                .setRequired(false))
         .setDefaultPermission(false),
 	async run(client, interaction) {
 		await interaction.deferReply({ ephemeral: true });
@@ -50,22 +42,42 @@ module.exports = {
 					.addOptions(options)
                     .setMaxValues(1)
 			);
-        let title = interaction.options.getString('title') ? `**Title**: \`\`\`\n${interaction.options.getString('title')}\n\`\`\`` : '';
-        interaction.editReply({ content: `${title}**Text**: \`\`\`\n${interaction.options.getString('text')}\n\`\`\``, components: [row]});
+        interaction.editReply({ components: [row] });
 	},
     async selectionMenu(client, interaction) {
-        const initialContent = interaction.message.content;
-        const parts = helper.extract(initialContent, "`").filter(group => group.length > 0);
-        if (parts.length == 1) {
-            const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
-            index.announce(`${roleID} \`\`\`\n${text}\n\`\`\``);
-        } else {
-            const title = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
-            const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[1];
-            index.announce(`${roleID} **${title}**\`\`\`\n${text}\n\`\`\``);
-        }
-        const roleID = interaction.values[0];
+        const modal = new Modal()
+            .setTitle('Announcement')
+            .setCustomId(interaction.values[0])
 
+        const titleInput = new TextInputComponent()
+            .setCustomId('titleInput')
+            .setLabel("Title:")
+            .setStyle('SHORT')
+            .setRequired(false)
+        const textInput = new TextInputComponent()
+            .setCustomId('textInput')
+            .setLabel("Text:")
+            .setStyle('PARAGRAPH')
+            .setRequired(true)
+        
+        const titleActionRow = new MessageActionRow().addComponents(titleInput);
+        const textActionRow = new MessageActionRow().addComponents(textInput);
+
+        modal.addComponents(titleActionRow, textActionRow);
+
+        await interaction.showModal(modal);
+    },
+    async modal(client, interaction) {
+        const title = interaction.fields.getTextInputValue('titleInput');
+        const text = interaction.fields.getTextInputValue('textInput');
+        const roleID = interaction.customId;
+
+        if (title) {
+            index.announce(`${roleID} **${title}**\`\`\`\n${text}\n\`\`\``);
+        } else {
+            index.announce(`${roleID} \`\`\`\n${text}\n\`\`\``);
+        }
+        
         interaction.update({ content: `:white_check_mark: Successfully made the announcement. `, components: [] });
     }
 };

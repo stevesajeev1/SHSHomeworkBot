@@ -15,6 +15,12 @@ module.exports = async (client, interaction) => {
       client.slashcmds.get(interaction.message.interaction.commandName).selectionMenu(client, interaction);
       return;
     }
+    
+    // If it is a modal submission
+    if (interaction.isModalSubmit()) {
+      client.slashcmds.get(interaction.message.interaction.commandName).modal(client, interaction);
+      return;
+    }
 
     // If it doesn't apply, return
     return;
