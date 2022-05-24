@@ -24,10 +24,13 @@ module.exports = {
                 if (!hw.includes("Hooray, no homework at this time! 🎉")) {
                     homeworkDescription += hw;
                 }
-                // homeworkDescription += homework.generateHomework(client, className.channelID, className.roleID).description + "\n";
             }
         }
-        homeworkEmbed.setDescription(homeworkDescription);
-        interaction.editReply({ embeds: [homeworkEmbed]});
+        if (homeworkDescription == "") {
+            interaction.editReply("Hooray, no homework at this time! 🎉");
+        } else {
+            homeworkEmbed.setDescription(homeworkDescription);
+            interaction.editReply({ embeds: [homeworkEmbed]});
+        }
 	}
 };

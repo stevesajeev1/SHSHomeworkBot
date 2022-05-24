@@ -30,12 +30,15 @@ module.exports = {
         
         // generate list of homeworks in system
         // first generate the options
-        let options = [];
+        let options = [{
+            label: "📣 General",
+            value: `<@&${client.config.everyoneRole}>`
+        }];
         let classes = JSON.parse(fs.readFileSync('channels.json'));
         for (var className of classes) {
             options.push({
                 label: className.name,
-                value: className.roleID
+                value: `<@&${className.roleID}>`
             });
         }
 
@@ -52,11 +55,16 @@ module.exports = {
 	},
     async selectionMenu(client, interaction) {
         const initialContent = interaction.message.content;
-        const title = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
-        const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[1];
+        const parts = helper.extract(initialContent, "`").filter(group => group.length > 0);
+        if (parts.length == 1) {
+            const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
+            index.announce(`${roleID} \`\`\`\n${text}\n\`\`\``);
+        } else {
+            const title = helper.extract(initialContent, "`").filter(group => group.length > 0)[0];
+            const text = helper.extract(initialContent, "`").filter(group => group.length > 0)[1];
+            index.announce(`${roleID} **${title}**\`\`\`\n${text}\n\`\`\``);
+        }
         const roleID = interaction.values[0];
-        
-        index.announce(`<@&${roleID}>**${title}**\`\`\`\n${text}\n\`\`\``);
 
         interaction.update({ content: `:white_check_mark: Successfully made the announcement. `, components: [] });
     }
