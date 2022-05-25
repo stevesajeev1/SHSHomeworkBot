@@ -22,8 +22,8 @@ const client = new Client({
 });
 client.login(config.token);
 
-let channels = JSON.parse(fs.readFileSync('channels1.json'));
-let imapInfo = JSON.parse(fs.readFileSync('imapInfo1.json'));
+let channels = JSON.parse(fs.readFileSync('channels.json'));
+let imapInfo = JSON.parse(fs.readFileSync('imapInfo.json'));
 
 client.on("ready", async () => {
     console.log("Setting up class information...");
@@ -91,8 +91,8 @@ client.on("ready", async () => {
             imapInfo.push(imapObject);
         }
     }
-    fs.writeFileSync('channels1.json', JSON.stringify(channels, null, 2));
-    fs.writeFileSync('imapInfo1.json', JSON.stringify(imapInfo, null, 2));
+    fs.writeFileSync('channels.json', JSON.stringify(channels, null, 2));
+    fs.writeFileSync('imapInfo.json', JSON.stringify(imapInfo, null, 2));
 
     let embed = new MessageEmbed()
         .setTitle(`${schoolYear} Classes`)
