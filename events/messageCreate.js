@@ -14,7 +14,7 @@ module.exports = (client, message) => {
             let embed = new MessageEmbed()
                 .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
                 .setTitle("Mass Mention")
-                .setDescription("Mass mention detected! Vote if this ping is justified.")
+                .setDescription("Mass mention detected! Vote if this ping is unjustified.")
                 .setFooter({ text: ">=5 votes needed in order to enact a mute" })
                 .setColor('#9B59B6');
             message.reply({ embeds: [embed] })
