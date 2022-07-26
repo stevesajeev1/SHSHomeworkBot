@@ -116,11 +116,19 @@ exports.start = (client, debug) => {
         });
     
         imap.on('error', (err) => {
-            console.log('IMAP error: ' + err);
+          console.log('IMAP error: ' + err);
+          if (err.message == "Invalid credentials (Failure)") {
+            tokenGen.updateToken();
+            tokenGen.on('token', (token) => {
+                imap.xoauth2 = token;
+                console.log('rebooting imap');
+                imap.connect();
+            });
+          } else {
             console.log('rebooting imap');
-            imap.end();
             imap.connect();
-        });
+          }
+      });
     
         imap.on('mail', () => {
             imap.search([ ['OR', 'UNSEEN', 'NEW'], ['FROM', 'notifications@instructure.com'] ], (err, results) => {
