@@ -117,18 +117,23 @@ exports.start = (client, debug) => {
     
         imap.on('error', (err) => {
           console.log('IMAP error: ' + err);
-          if (err.message == "Invalid credentials (Failure)") {
-            tokenGen.updateToken();
-            tokenGen.on('token', (token) => {
-                imap.xoauth2 = token;
-                console.log('rebooting imap');
-                imap.connect();
-            });
-          } else {
-            console.log('rebooting imap');
-            imap.connect();
-          }
-      });
+          tokenGen.updateToken();
+          tokenGen.on('token', (token) => {
+              imap.xoauth2 = token;
+              console.log('rebooting imap');
+              imap.connect();
+          });
+        });
+
+        imap.on('close', (hadErr) => {
+          console.log(hadErr ? "IMAP Closed with Error" : "IMAP Closed");
+          tokenGen.updateToken();
+          tokenGen.on('token', (token) => {
+              imap.xoauth2 = token;
+              console.log('rebooting imap');
+              imap.connect();
+          });
+        });
     
         imap.on('mail', () => {
             imap.search([ ['OR', 'UNSEEN', 'NEW'], ['FROM', 'notifications@instructure.com'] ], (err, results) => {
@@ -172,7 +177,7 @@ exports.start = (client, debug) => {
                     console.log('Fetch error: ' + err);
                 });
             });
-        })
+        });
     
         imap.connect();
     });
