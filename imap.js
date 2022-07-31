@@ -117,21 +117,25 @@ exports.start = (client, debug) => {
     
         imap.on('error', (err) => {
           console.log('IMAP error: ' + err);
-          tokenGen.updateToken();
-          tokenGen.on('token', (token) => {
-              imap.xoauth2 = token;
-              console.log('rebooting imap');
-              imap.connect();
+          tokenGen.getToken((err, token) => {
+            if (err) {
+              return console.log(err);
+            }
+            imap.xoauth2 = token;
+            console.log('rebooting imap');
+            imap.connect();
           });
         });
 
         imap.on('close', (hadErr) => {
           console.log(hadErr ? "IMAP Closed with Error" : "IMAP Closed");
-          tokenGen.updateToken();
-          tokenGen.on('token', (token) => {
-              imap.xoauth2 = token;
-              console.log('rebooting imap');
-              imap.connect();
+          tokenGen.getToken((err, token) => {
+            if (err) {
+              return console.log(err);
+            }
+            imap.xoauth2 = token;
+            console.log('rebooting imap');
+            imap.connect();
           });
         });
     
