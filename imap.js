@@ -1,6 +1,5 @@
 const Imap = require('node-imap');
 const xoauth2 = require('xoauth2');
-const util = require('util');
 const fs = require('fs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat')
@@ -113,18 +112,6 @@ exports.start = (client, debug) => {
         imap.on('ready', () => {
             console.log('imap is ready');
             openInbox(imap);
-        });
-    
-        imap.on('error', (err) => {
-          console.log('IMAP error: ' + err);
-          tokenGen.getToken((err, token) => {
-            if (err) {
-              return console.log(err);
-            }
-            imap.xoauth2 = token;
-            console.log('rebooting imap');
-            imap.connect();
-          });
         });
 
         imap.on('close', (hadErr) => {
