@@ -15,10 +15,21 @@ module.exports = (client, message) => {
                 .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL() })
                 .setTitle("Mass Mention")
                 .setDescription("Mass mention detected! Vote if this ping is unjustified.")
-                .setFooter({ text: ">=5 votes needed in order to enact a mute" })
+                .setFooter({ text: ">=5 votes needed in order to enact a mute, Voting ends in 10 minutes" })
                 .setColor('#9B59B6');
             message.reply({ embeds: [embed] })
-                .then(m => m.react("✅"))
+                .then(m => {
+                    m.react("✅");
+                    setTimeout(() => {
+                        // reply id: m.id
+                        if (footer) {
+                            delete embed.footer;
+                            embed.setDescription("The voting period has ended. The ping is justified.");
+                            m.edit({ embeds: embed });
+                            m.reactions.removeAll();
+                        }
+                    }, 10 * 60 * 1000);
+                });
         }      
     }
 
