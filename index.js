@@ -15,7 +15,12 @@ const client = new Client({
   partials: [
       'CHANNEL', // Required to receive DMs
       'REACTION'
-  ]
+  ],
+  ws: {
+    properties: {
+      $browser: "Discord iOS"
+    }
+  }
 });
 const config = require("./config.json");
 
