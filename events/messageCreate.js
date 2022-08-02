@@ -21,7 +21,6 @@ module.exports = (client, message) => {
                 .then(m => {
                     m.react("✅");
                     setTimeout(() => {
-                        // reply id: m.id
                         if (footer) {
                             delete embed.footer;
                             embed.setDescription("The voting period has ended. The ping is justified.");
