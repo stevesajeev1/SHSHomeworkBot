@@ -24,7 +24,6 @@ const client = new Client({
 });
 const config = require("./config.json");
 
-const imap = require("./imap.js");
 const update = require('./helper/update.js')
 
 const schedule = require('node-schedule');
@@ -64,7 +63,6 @@ client.login(config.token);
 if (process.argv.includes('--debug')) {
   console.log('\x1b[33m%s\x1b[0m', 'Debugging Mode');
 }
-imap.start(client, process.argv.includes('--debug'));
 
 // listen for scheduling
 console.log('started running every minute');
@@ -94,4 +92,8 @@ exports.debug = (text) => {
   client.users.fetch(config.ownerID, false).then((user) => {
     user.send('```\n' + text + '\n```');
   });
+}
+
+exports.getClient = () => {
+  return client;
 }

@@ -12,9 +12,8 @@ const edit = require("./slash/edit.js");
 dayjs.extend(customParseFormat);
 
 let botClient;
-let debugging;
 
-function mail(mail) {
+function mailProcessing(mail) {
   // mail processing code goes here
   if (mail.address !== 'notifications@instructure.com') return;
   // parse role
@@ -78,9 +77,8 @@ function mail(mail) {
   }
 };
 
-exports.start = (client, debug) => {
+function start(client) {
     botClient = client;
-    debugging = debug;
 
     let tokenGen = xoauth2.createXOAuth2Generator({
       user: config.imapEmail,
@@ -91,7 +89,8 @@ exports.start = (client, debug) => {
     
     tokenGen.getToken((err, token) => {
         if (err) {
-            return console.log(err);
+            console.log(err);
+            throw err;
         }
     
         let imap = new Imap({
@@ -114,11 +113,17 @@ exports.start = (client, debug) => {
             openInbox(imap);
         });
 
+        imap.on('error', (err) => {
+          console.log("IMAP Error: " + err);
+          throw err;
+        });
+
         imap.on('close', (hadErr) => {
           console.log(hadErr ? "IMAP Closed with Error" : "IMAP Closed");
           tokenGen.getToken((err, token) => {
             if (err) {
-              return console.log(err);
+              console.log(err);
+              throw err;
             }
             imap.xoauth2 = token;
             console.log('rebooting imap');
@@ -133,10 +138,12 @@ exports.start = (client, debug) => {
                 }
                 if (err) {
                     console.log('Error searching for new message: ' + err);
+                    throw err;
                 }
                 imap.setFlags(results, ['\\Seen'], (err) => {
                     if (err) {
                         console.log('Error marking messages as seen: ' + err);
+                        throw err;
                     }
                 });
                 const f = imap.fetch(results, { 
@@ -161,11 +168,12 @@ exports.start = (client, debug) => {
                         }
                     });
                     msg.once('end', () => {
-                      mail(mail);
+                      mailProcessing(mail);
                     })
                 });
                 f.once('error', (err) => {
                     console.log('Fetch error: ' + err);
+                    throw err;
                 });
             });
         });
@@ -186,10 +194,12 @@ function openInbox(imap) {
           }
           if (err) {
               console.log('Error searching for unseen messages: ' + err);
+              throw err;
           }
           imap.setFlags(results, ['\\Seen'], (err) => {
               if (err) {
                   console.log('Error marking messages as seen: ' + err);
+                  throw err;
               }
           });
           const f = imap.fetch(results, { 
@@ -214,11 +224,12 @@ function openInbox(imap) {
                 }
               });
               msg.once('end', () => {
-                mail(mail);
+                mailProcessing(mail);
               })
           });
           f.once('error', (err) => {
               console.log('Fetch error: ' + err);
+              throw err;
           });
       });
   });
@@ -242,3 +253,5 @@ function streamToString (stream) {
     stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
   });
 }
+
+start(index.getClient());
