@@ -4,14 +4,12 @@ const fs = require('fs');
 const dayjs = require('dayjs');
 const customParseFormat = require('dayjs/plugin/customParseFormat')
 const config = require("./config.json");
-const index = require("./index.js");
 const helper = require("./helper/helper.js");
 const add = require("./slash/add.js");
 const edit = require("./slash/edit.js");
+const mimelib = require("mimelib");
 
 dayjs.extend(customParseFormat);
-
-let botClient;
 
 function mailProcessing(mail) {
   // mail processing code goes here
@@ -22,9 +20,6 @@ function mailProcessing(mail) {
 
   const subject = mail.subject;
   const text = mail.text;
-  if (debugging) {
-    index.debug(text);
-  }
 
   // Determine what type of action it is
   if (subject.startsWith("Updated Page: ")) return;
@@ -33,53 +28,41 @@ function mailProcessing(mail) {
     // add assignment
     let homeworkName = subject.substring(subject.indexOf("-") + 2, subject.lastIndexOf(",")).trim();
     let unparsedDate = text.substring(text.lastIndexOf("due") + 5, text.lastIndexOf("Click")).trim().replace(' at ', ' ').replace(/  +/g, ' ');
-    if (debugging) {
-      index.debug("Unparsed: " + unparsedDate);
-    }
     let parsedDate = dayjs(unparsedDate, 'MMM D h:mma');
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D ha');
     }
-    if (debugging) {
-      index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
-    }
     // No due date
     if (!parsedDate.isValid()) {
-      add.add(botClient, homeworkName, null, channelID);
+      add.add(client, homeworkName, null, channelID);
     } else {
-      add.add(botClient, homeworkName, parsedDate, channelID);
+      add.add(client, homeworkName, parsedDate, channelID);
     }
   } else if (subject.startsWith('Assignment Due Date Changed: ')) {
     // edit assignment
     let homeworkName = subject.substring(subject.indexOf(":") + 2, subject.lastIndexOf(",")).trim();
     let unparsedDate = text.substring(text.lastIndexOf("to:") + 3, text.lastIndexOf("Click")).trim().replace(' at ', ' ').replace(/  +/g, ' ');
-    if (debugging) {
-      index.debug("Unparsed: " + unparsedDate);
-    }
     let parsedDate = dayjs(unparsedDate, 'MMM D h:mma');
     if (!parsedDate.isValid()) {
         parsedDate = dayjs(unparsedDate, 'MMM D ha');
     }
-    if (debugging) {
-      index.debug("Parsed: " + parsedDate.format('MM/DD/YYYY h:mm A'));
-    }
+    parsedDate = dayjs(unparsedDate, 'MMM D ha');
     // No due date
     if (!parsedDate.isValid()) {
-      edit.edit(botClient, homeworkName, 'none', homeworkName, channelID);
+      edit.edit(client, homeworkName, 'none', homeworkName, channelID);
     } else {
-      edit.edit(botClient, homeworkName, parsedDate, homeworkName, channelID);
+      edit.edit(client, homeworkName, parsedDate, homeworkName, channelID);
     }
   } else if (text.includes('/announcements/')) {
     // announce
-    index.announce(`<@&${roleID}>\n**${subject.substring(0, subject.lastIndexOf(':'))}**\`\`\`\n${text.substring(0, text.lastIndexOf('________________________________________')).trim()}\n\`\`\``);
+    announce(`<@&${roleID}>\n**${subject.substring(0, subject.lastIndexOf(':'))}**\`\`\`\n${text.substring(0, text.lastIndexOf('________________________________________')).trim()}\n\`\`\``);
   } else {
-    index.debug(subject);
+    debug(subject);
+    return;
   }
 };
 
-function start(client) {
-    botClient = client;
-
+function start() {
     let tokenGen = xoauth2.createXOAuth2Generator({
       user: config.imapEmail,
       clientId: config.clientId,
@@ -109,8 +92,8 @@ function start(client) {
         });
         
         imap.on('ready', () => {
-            console.log('imap is ready');
             openInbox(imap);
+            console.log('imap is ready');
         });
 
         imap.on('error', (err) => {
@@ -157,7 +140,7 @@ function start(client) {
                             let rawText = await streamToString(stream);
                             let plainText = rawText.substring(rawText.indexOf("UTF-8") + 7, rawText.indexOf("text/html")).trim();
                             let parsedText = plainText.substring(0, plainText.lastIndexOf("\n")).trim();
-                            parsedText = parsedText.substring(0, parsedText.lastIndexOf("\n")).trim();
+                            parsedText = mimelib.decodeQuotedPrintable(parsedText.substring(0, parsedText.lastIndexOf("\n")).trim()).substring(43).trim();
                             mail.text = parsedText;
                         } else {
                             let headers = await streamToString(stream);
@@ -188,7 +171,7 @@ function openInbox(imap) {
           throw err;
       }
       // check if there were any emails before startup
-      imap.search([ 'UNSEEN', ['FROM', 'notifications@instructure.com'] ], (err, results) => {
+      imap.search([ ['OR', 'UNSEEN', 'NEW'], ['FROM', 'notifications@instructure.com'] ], (err, results) => {
           if (!results || !results.length) {
               return;
           }
@@ -207,23 +190,26 @@ function openInbox(imap) {
               markSeen: true
           });
           f.on('message', (msg) => {
-            let mail = {};
+            let textStream, headerStream;
             msg.on('body', async (stream, info) => {
                 if (info.which === 'TEXT') {
-                    let rawText = await streamToString(stream);
-                    let plainText = rawText.substring(rawText.indexOf("UTF-8") + 7, rawText.indexOf("text/html")).trim();
-                    let parsedText = plainText.substring(0, plainText.lastIndexOf("\n")).trim();
-                    parsedText = parsedText.substring(0, parsedText.lastIndexOf("\n")).trim();
-                    mail.text = parsedText;
+                    textStream = stream;
                 } else {
-                    let headers = await streamToString(stream);
-                    let from = Imap.parseHeader(headers)['from'][0];
-                    mail.name = from.substring(0, from.lastIndexOf(" "));
-                    mail.address = from.substring(from.indexOf("<") + 1, from.indexOf(">"));
-                    mail.subject = Imap.parseHeader(headers)['subject'][0];
+                    headerStream = stream;
                 }
               });
-              msg.once('end', () => {
+              msg.once('end', async () => {
+                let mail = {};
+                let rawText = await streamToString(textStream);
+                let plainText = rawText.substring(rawText.indexOf("UTF-8") + 7, rawText.indexOf("text/html")).trim();
+                let parsedText = plainText.substring(0, plainText.lastIndexOf("\n")).trim();
+                parsedText = mimelib.decodeQuotedPrintable(parsedText.substring(0, parsedText.lastIndexOf("\n")).trim()).substring(43).trim();
+                mail.text = parsedText;
+                let headers = await streamToString(headerStream);
+                let from = Imap.parseHeader(headers)['from'][0];
+                mail.name = from.substring(0, from.lastIndexOf(" "));
+                mail.address = from.substring(from.indexOf("<") + 1, from.indexOf(">"));
+                mail.subject = Imap.parseHeader(headers)['subject'][0];
                 mailProcessing(mail);
               })
           });
@@ -254,4 +240,42 @@ function streamToString (stream) {
   });
 }
 
-start(index.getClient());
+const client = new Client({
+  intents: [
+    Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_MESSAGES,
+    Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+    Intents.FLAGS.GUILD_MESSAGE_TYPING,
+    Intents.FLAGS.DIRECT_MESSAGES,
+    Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
+    Intents.FLAGS.DIRECT_MESSAGE_TYPING,
+    Intents.FLAGS.GUILD_MEMBERS
+  ],
+  partials: [
+      'CHANNEL', // Required to receive DMs
+      'REACTION'
+  ],
+  ws: {
+    properties: {
+      $browser: "Discord iOS"
+    }
+  }
+});
+
+client.login(config.token);
+
+client.on("ready", () => {
+  start();
+});
+
+function announce(text) {
+  try {
+    client.channels.cache.get(config.announcement).send(text);
+  } catch (e) {}
+}
+
+function debug(text) {
+  client.users.fetch(config.ownerID, false).then((user) => {
+    user.send('```\n' + text + '\n```');
+  });
+}

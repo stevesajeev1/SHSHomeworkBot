@@ -81,19 +81,3 @@ schedule.scheduleJob("0 * * ? * *", function() {
         }
     }
 })
-
-exports.announce = (text) => {
-  try {
-    client.channels.cache.get(config.announcement).send(text);
-  } catch (e) {}
-}
-
-exports.debug = (text) => {
-  client.users.fetch(config.ownerID, false).then((user) => {
-    user.send('```\n' + text + '\n```');
-  });
-}
-
-exports.getClient = () => {
-  return client;
-}
