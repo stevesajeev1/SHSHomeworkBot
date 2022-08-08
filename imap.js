@@ -1,4 +1,5 @@
 const Imap = require('node-imap');
+const { Client, Intents } = require("discord.js");
 const xoauth2 = require('xoauth2');
 const fs = require('fs');
 const dayjs = require('dayjs');
